@@ -10,6 +10,7 @@ public class PlayerController : MonoBehaviour {
 
 	public void Start ()
 	{
+		countText.color = Color.blue;
 		countText.text = "Old Score: " + RetrieveScore ().ToString ();
 		count = 0;
 	}
@@ -19,6 +20,7 @@ public class PlayerController : MonoBehaviour {
 		count += 1;
 		SaveScore (count);
 
+		countText.color = Color.black;
 		countText.text = "Score: " + count.ToString ();
 		if (count >= 12)
 		{
