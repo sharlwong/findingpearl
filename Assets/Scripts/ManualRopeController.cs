@@ -1,7 +1,8 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// attach this script to each rope fragment
+// attach this script to each rope fragment, 
+// except the FIRST and LAST fragment (as those are fixed)
 public class ManualRopeController : MonoBehaviour {
 
 	private Vector3 screenPoint;

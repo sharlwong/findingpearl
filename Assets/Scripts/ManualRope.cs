@@ -37,6 +37,9 @@ public class ManualRope : MonoBehaviour {
 	LineRenderer brokenRopeRenderer1;
 	LineRenderer brokenRopeRenderer2;
 
+	Color rendererStartColor;
+	Color rendererEndColor;
+
 	// TODO: possibly instantiate fragments programatically prior to production
 	// but while debugging declare it in the scene for now
 	void Start() {
@@ -53,18 +56,25 @@ public class ManualRope : MonoBehaviour {
 			Debug.Log(ropeFragmentsPosition[i]);
 		}
 
-		// assign values to the various line renderers and set some properties
-		// this game object that the script is attached to contains a line renderer component
+		// ** assign values to the various line renderers and set some properties ** //
+
+		// these colors also interact with the material and its tint attached to the renderer;
+		// i.e. don't expect the rendered rope to take on the exact same color specified here
+		rendererStartColor = new Color32(184,134,11,255);
+		rendererEndColor = new Color32(184,134,11,255);
+
 		ropeRenderer = GetComponent<LineRenderer>(); 
 		ropeRenderer.SetVertexCount(fragmentCount);
 		ropeRenderer.SetWidth(ropeRendererWidth, ropeRendererWidth);
+		ropeRenderer.SetColors(rendererStartColor, rendererEndColor);
 
-		// the broken rope segment game objects similarly contain a line renderer component
 		brokenRopeRenderer1 = brokenRopeSegment1.GetComponent<LineRenderer>();
 		brokenRopeRenderer1.SetWidth(ropeRendererWidth, ropeRendererWidth);
+		brokenRopeRenderer1.SetColors(rendererStartColor, rendererEndColor);
 
 		brokenRopeRenderer2 = brokenRopeSegment2.GetComponent<LineRenderer>();
 		brokenRopeRenderer2.SetWidth(ropeRendererWidth, ropeRendererWidth);
+		brokenRopeRenderer2.SetColors(rendererStartColor, rendererEndColor);
 	}
 	
 	// to be called by the Controller handling user input
