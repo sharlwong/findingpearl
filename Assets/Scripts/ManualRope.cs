@@ -4,7 +4,18 @@ using System.Collections;
 // attach this script to the parent object containing all the rope fragments
 public class ManualRope : MonoBehaviour {
 
-	// array containing the rope fragment game objects
+	// maximum length the rope can stretch before breaking
+	public float maximumRopeLength;
+
+	// these game objects would become useful when the rope breaks,
+	// in order to draw 2 separate ropes from the point of breakage
+	public GameObject brokenRopeSegment1;
+	public GameObject brokenRopeSegment2;
+
+	// thickness to render the ropes
+	public float ropeRendererWidth;
+	
+	// array containing the game objects of each rope fragment
 	GameObject[] ropeFragments; 
 
 	// array to record the ropeFragmentPosition so as to calculate the
@@ -12,17 +23,19 @@ public class ManualRope : MonoBehaviour {
 	// that was moved by the user
 	Vector3[] ropeFragmentsPosition; 
 
+	// most recent rope fragment number that was moved
+	int lastFragmentNumMovedByPlayer;
+
 	// total number of rope fragments attached to the parent rope object
 	int fragmentCount;
 
-	// various data structures below for the line renderer
-	float[] xPositions;
-	float[] yPositions;
-	float[] zPositions;
-	CatmullRomSpline splineX;
-	CatmullRomSpline splineY;
-	CatmullRomSpline splineZ;
-	int splineFactor = 2;
+	bool ropeIsBroken = false;
+
+	// various line renderers to draw lines between rope fragments
+	// and give the appearance of a rope to the user
+	LineRenderer ropeRenderer; 
+	LineRenderer brokenRopeRenderer1;
+	LineRenderer brokenRopeRenderer2;
 
 	// TODO: possibly instantiate fragments programatically prior to production
 	// but while debugging declare it in the scene for now
@@ -40,17 +53,18 @@ public class ManualRope : MonoBehaviour {
 			Debug.Log(ropeFragmentsPosition[i]);
 		}
 
-		LineRenderer renderer = GetComponent<LineRenderer>();
-		renderer.SetWidth(0.2f, 0.21f);
-		renderer.SetVertexCount((fragmentCount - 1) * splineFactor + 1);
+		// assign values to the various line renderers and set some properties
+		// this game object that the script is attached to contains a line renderer component
+		ropeRenderer = GetComponent<LineRenderer>(); 
+		ropeRenderer.SetVertexCount(fragmentCount);
+		ropeRenderer.SetWidth(ropeRendererWidth, ropeRendererWidth);
 
-		xPositions = new float[fragmentCount];
-		yPositions = new float[fragmentCount];
-		zPositions = new float[fragmentCount];
-				
-		splineX = new CatmullRomSpline(xPositions);
-		splineY = new CatmullRomSpline(yPositions);
-		splineZ = new CatmullRomSpline(zPositions);
+		// the broken rope segment game objects similarly contain a line renderer component
+		brokenRopeRenderer1 = brokenRopeSegment1.GetComponent<LineRenderer>();
+		brokenRopeRenderer1.SetWidth(ropeRendererWidth, ropeRendererWidth);
+
+		brokenRopeRenderer2 = brokenRopeSegment2.GetComponent<LineRenderer>();
+		brokenRopeRenderer2.SetWidth(ropeRendererWidth, ropeRendererWidth);
 	}
 	
 	// to be called by the Controller handling user input
@@ -63,6 +77,8 @@ public class ManualRope : MonoBehaviour {
 				break;
 			}
 		}
+
+		lastFragmentNumMovedByPlayer = fragmentNum;
 
 		float newX = fragmentMoved.transform.position.x;
 		float oldX = ropeFragmentsPosition[fragmentNum].x;
@@ -84,10 +100,9 @@ public class ManualRope : MonoBehaviour {
 		}
 
 		// calculate how much to move the neighbor fragment by using a scale factor
-		// currently uses a simple scale factor (more sophisticated math could be used
+		// currently uses a simple scale factor (more sophisticated math could be used)
 		float scale = 0.90f;
 		delta = scale * delta;
-
 
 		// rope fragment is restricted to move only in the x axis direction
 		// (i.e. left and right, with respect to a vertically oriented rope in game)
@@ -111,26 +126,56 @@ public class ManualRope : MonoBehaviour {
 			MoveFragment(fragmentNumber+1, direction, delta);
 		}
 	}
+	
+	float CalculateRopeLength() {
+		float lengthOfRope = 0.0f;
+		for (int i = 0; i < (fragmentCount/2); i++) {
+			lengthOfRope += Vector3.Distance(ropeFragmentsPosition[i], ropeFragmentsPosition[i+1]);
+		}
+		//Debug.Log("Length of rope: " + lengthOfRope);
+		return lengthOfRope;
+	}
 
 	// called every frame, only after all Update functions have been called
 	void LateUpdate() {
-		// copy rigidbody positions to the line renderer
-		LineRenderer renderer = GetComponent<LineRenderer>();
 
-		int i;
-		for (i = 0; i < fragmentCount; i++) {
-			Vector3 position = ropeFragmentsPosition[i];
-			xPositions[i] = position.x;
-			yPositions[i] = position.y;
-			zPositions[i] = position.z;
+		if (ropeIsBroken) {
+			return;
 		}
-		
-		for (i = 0; i < (fragmentCount - 1) * splineFactor + 1; i++) {
-			renderer.SetPosition(i, new Vector3(
-				splineX.GetValue(i / (float) splineFactor), 
-				splineY.GetValue(i / (float) splineFactor), 
-				splineZ.GetValue(i / (float) splineFactor)));
+
+		if (CalculateRopeLength() > maximumRopeLength) {
+			Debug.Log("Rope has been broken!");
+			ropeIsBroken = true;
+
+			// first, undraw the rope 
+			GetComponent<LineRenderer>().SetVertexCount(0);
+
+			// then, draw the two broken rope segments from the point of breakage
+
+			// draw the first rope segment
+			int numOfVertices = lastFragmentNumMovedByPlayer;
+			Debug.Log(numOfVertices);
+			brokenRopeRenderer1.SetVertexCount(numOfVertices);
+			for (int i = 0; i < numOfVertices; i++) {
+				brokenRopeRenderer1.SetPosition(i, ropeFragmentsPosition[i]);
+			}
+
+			// draw the second rope segment
+			numOfVertices = fragmentCount - lastFragmentNumMovedByPlayer;
+			brokenRopeRenderer2.SetVertexCount(numOfVertices);
+			for (int i = 0; i < numOfVertices; i++) {
+				brokenRopeRenderer2.SetPosition(i, ropeFragmentsPosition[i+lastFragmentNumMovedByPlayer]);
+			}
+
+			return;
 		}
+
+		// draw the rope normally if the rope has not been broken
+		for (int i = 0; i <fragmentCount; i++) {
+			ropeRenderer.SetPosition(i, ropeFragmentsPosition[i]);
+		}
+
+		return;
 	}
 
 }
