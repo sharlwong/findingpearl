@@ -129,10 +129,11 @@ public class ManualRope : MonoBehaviour {
 	
 	float CalculateRopeLength() {
 		float lengthOfRope = 0.0f;
-		for (int i = 0; i < (fragmentCount/2); i++) {
+		for (int i = 0; i < (fragmentCount-1); i++) {
 			lengthOfRope += Vector3.Distance(ropeFragmentsPosition[i], ropeFragmentsPosition[i+1]);
+			Debug.Log (lengthOfRope);
 		}
-		//Debug.Log("Length of rope: " + lengthOfRope);
+		Debug.Log("Length of rope: " + lengthOfRope);
 		return lengthOfRope;
 	}
 
