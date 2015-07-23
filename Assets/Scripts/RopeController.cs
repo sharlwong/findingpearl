@@ -8,7 +8,7 @@ public class RopeController : MonoBehaviour
 	int fragmentNum = 20; // originally 80
 	GameObject[] fragments;
 	
-	float activeFragmentNum = 20; // originally 80
+	//float activeFragmentNum = 20; // originally 80
 	
 	//Vector3 interval = new Vector3(0f, 0f, 0.25f);
 	Vector3 interval = new Vector3(0f, 0f, 0.50f); // interval between pts
@@ -65,7 +65,7 @@ public class RopeController : MonoBehaviour
 	
 	void Update()
 	{
-		float vy = Input.GetAxisRaw("Vertical") * 20f * Time.deltaTime;
+		//float vy = Input.GetAxisRaw("Vertical") * 20f * Time.deltaTime;
 //		activeFragmentNum = Mathf.Clamp(activeFragmentNum + vy, 0, fragmentNum);
 //		
 //		for (int i = 0; i < fragmentNum; i++) {

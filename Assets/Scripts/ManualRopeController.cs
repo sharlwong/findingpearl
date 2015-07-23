@@ -45,5 +45,5 @@ public class ManualRopeController : MonoBehaviour {
 
 	}
 
-	// TODO: add in touch controls similarly
+	// touch controls still seem to work normally even without custom code
 }

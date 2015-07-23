@@ -4,6 +4,12 @@ using System.Collections;
 // attach this script to the parent object containing all the rope fragments
 public class ManualRope : MonoBehaviour {
 
+	// thickness to render the ropes
+	public float ropeRendererWidth;
+
+	// how much neighboring fragments will move with respect to the moved fragment
+	public float ropeMovementScaleFactor;
+
 	// maximum length the rope can stretch before breaking
 	public float maximumRopeLength;
 
@@ -12,9 +18,6 @@ public class ManualRope : MonoBehaviour {
 	public GameObject brokenRopeSegment1;
 	public GameObject brokenRopeSegment2;
 
-	// thickness to render the ropes
-	public float ropeRendererWidth;
-	
 	// array containing the game objects of each rope fragment
 	GameObject[] ropeFragments; 
 
@@ -102,6 +105,7 @@ public class ManualRope : MonoBehaviour {
 	}
 
 	// recursively move neighboring rope fragments
+	// delta is the distance between the old X position and the new X position
 	void MoveFragment(int fragmentNumber, int direction, float delta) {
 
 		// base case: return if reached the fragments at the start and at the end
@@ -111,8 +115,7 @@ public class ManualRope : MonoBehaviour {
 
 		// calculate how much to move the neighbor fragment by using a scale factor
 		// currently uses a simple scale factor (more sophisticated math could be used)
-		float scale = 0.90f;
-		delta = scale * delta;
+		delta = ropeMovementScaleFactor * delta;
 
 		// rope fragment is restricted to move only in the x axis direction
 		// (i.e. left and right, with respect to a vertically oriented rope in game)
