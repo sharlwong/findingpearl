@@ -5,11 +5,11 @@ using System.Collections;
 // a rope is made up of many fragments
 public class ManualRope : MonoBehaviour {
 
-	// number of rope fragments
-	public int numOfFragments;
-
-	// vertical interval between fragments
-	public float fragmentInterval; 
+	public GameObject fragmentPrefab;
+		
+	public Vector3 firstFragmentPosition;	
+	public Vector3 lastFragmentPosition; // x,y should be same as the first fragment
+	public Vector3 fragmentInterval; // only along z axis for vertical rope 
 
 	// smoothness value scales the distance that neighboring fragments  
 	// will move with respect to the moved fragment for non-anchored fragments
@@ -31,7 +31,7 @@ public class ManualRope : MonoBehaviour {
 	// the x distance that fragments near the shell should move before
 	// becoming anchored, with respect to the seashell's anchor
 	public float anchoredFragmentsMoveAmount;
-
+	
 	// array containing the game objects of each rope fragment
 	GameObject[] ropeFragments; 
 
@@ -39,6 +39,8 @@ public class ManualRope : MonoBehaviour {
 	// difference between the old and new position for the fragment
 	// that was moved by the user
 	Vector3[] ropeFragmentsPosition; 
+
+	int numOfFragments;
 
 	// number referring to the most recent fragment moved by the player
 	int lastFragmentNumMovedByPlayer;
@@ -61,24 +63,41 @@ public class ManualRope : MonoBehaviour {
 
 	Color rendererStartColor;
 	Color rendererEndColor;
-
-	// TODO: possibly instantiate fragments programatically prior to production
-	// but while debugging declare it in the scene for now
+	
 	void Start() {
 
+		// commented out after implementing programatic instantiation of rope fragments;
+		// existing fragments in the Scene have been DISABLED (greyed out in Project Hierarchy)
+		// numOfFragments = transform.childCount;
 
-
-		numOfFragments = transform.childCount;
+		// calculate number of fragments required
+		numOfFragments = Mathf.CeilToInt( (lastFragmentPosition.z-firstFragmentPosition.z) 
+		                                 /fragmentInterval.z );
+		
+		Debug.Log("Number of fragments: " + numOfFragments);
 
 		// initialize and populate the respective arrays
 		ropeFragments = new GameObject[numOfFragments];
 		ropeFragmentsPosition = new Vector3[numOfFragments];
 		moveableFragments = new bool[numOfFragments];
 
+
+		Vector3 position = firstFragmentPosition;
+
 		for (int i = 0; i < numOfFragments; i++) {
-			ropeFragments[i] = transform.GetChild(i).gameObject;
-			ropeFragmentsPosition[i] = transform.GetChild(i).position;
-			// Debug.Log(ropeFragmentsPosition[i]);
+
+			ropeFragments[i] = (GameObject) Instantiate(
+												fragmentPrefab, 
+												position, 
+												Quaternion.identity);
+
+			ropeFragments[i].transform.parent = transform;
+			ropeFragmentsPosition[i] = position;
+
+			// commented out after implementing programatic instantiation of rope fragments;
+			// existing fragments in the Scene have been DISABLED (greyed out in Project Hierarchy)
+			// ropeFragments[i] = transform.GetChild(i).gameObject;
+			// ropeFragmentsPosition[i] = transform.GetChild(i).position;
 
 			// only allow fragments in between the first and last fragment to be moveable
 			if ( (i != 0) && (i != (numOfFragments-1)) ) {
@@ -86,6 +105,8 @@ public class ManualRope : MonoBehaviour {
 			} else {
 				moveableFragments[i] = false;
 			}
+
+			position += fragmentInterval;
 		}
 
 		// ** assign values to the various line renderers and set some properties ** //
