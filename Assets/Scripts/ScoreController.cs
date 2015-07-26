@@ -4,28 +4,25 @@ using System.Collections;
 
 public class ScoreController : MonoBehaviour {
 
-	public Text countText;
-	private int count;
+	public Text scoreText;
 
-	// Use this for initialization
-	void Start () {
-		count = 0;
+	private int score;
+	
+	void Start() {
+		score = 0;
+		SetScoreText();
 	}
 	
-	// Update is called once per frame
-	void Update () {
+	public void IncrementScore(int amount) {
+		score += amount;
+		SetScoreText();
 	}
 
-	void OnCollisionEnter (Collision col){
-//		Debug.Log( "collide (name) : " + col.collider.gameObject.name );
-//		Debug.Log ("shell collide");
-		if (col.gameObject.name == "Rope Fragment(Clone)") {
-			SetScoreText();
-		}
+	public void SetScoreText() {
+		scoreText.text = "RP: " + score.ToString();
 	}
 
-	void SetScoreText() {
-		count += 1;
-		countText.text = "Score: " + count.ToString ();
+	public int getScore() {
+		return score;
 	}
 }

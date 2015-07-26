@@ -18,12 +18,17 @@ using System.Collections;
 public class ManualRopeControllerAnchor : MonoBehaviour {
 
 	public bool enableTriggerBehavior;
-
+		
 	private ManualRope manualRope;
+	private ScoreController scoreController;
 
 	void Start () {
 		enableTriggerBehavior = false;
 		manualRope = transform.parent.parent.GetComponent<ManualRope>();
+
+		// cannot attach a reference in the scene to a prefab and automatically
+		// apply that to all prefabs; therefore we to have use find instead
+		scoreController = (ScoreController) FindObjectOfType(typeof(ScoreController));
 	}
 
 	void OnTriggerEnter(Collider other) {
@@ -32,7 +37,8 @@ public class ManualRopeControllerAnchor : MonoBehaviour {
 				manualRope.MoveLimitedRope(transform.parent.gameObject, 
 				                           other.gameObject, 
 				                           other.transform.position.x);
-				
+
+				scoreController.IncrementScore(100);
 			}
 		}
 	}
