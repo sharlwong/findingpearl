@@ -1,4 +1,4 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 // attach this script to the anchor, which is the CHILD of every rope fragment;
@@ -15,32 +15,40 @@ using System.Collections;
 //
 // hence we use the child, which has a smaller collider, for the anchoring event
 
-public class ManualRopeControllerAnchor : MonoBehaviour {
-
-	public bool enableTriggerBehavior;
+public class RopeFragmentAnchorController : MonoBehaviour {
 		
-	private ManualRope manualRope;
+	private RopeModel ropeModel;
 	private ScoreController scoreController;
+	private bool enableTriggerBehavior;
 
 	void Start () {
-		enableTriggerBehavior = false;
-		manualRope = transform.parent.parent.GetComponent<ManualRope>();
+		ropeModel = transform.parent.parent.GetComponent<RopeModel>();
 
 		// cannot attach a reference in the scene to a prefab and automatically
 		// apply that to all prefabs; therefore we to have use find instead
 		scoreController = (ScoreController) FindObjectOfType(typeof(ScoreController));
+
+		// triggering behavior is off by default
+		DisableTriggerBehavior();
 	}
 
 	void OnTriggerEnter(Collider other) {
-		enableTriggerBehavior = true;
 		if (enableTriggerBehavior) {
-			if (other.gameObject.name == "Anchor") {
+			if (other.gameObject.name == "Seashell Anchor") {
 
-				manualRope.AnchorFragments(transform.parent.gameObject, 
-				                           other.gameObject);
+				ropeModel.AnchorFragments(transform.parent.gameObject, 
+				                          other.gameObject);
 
 				scoreController.IncrementScore(100);
 			}
 		}
+	}
+
+	public void EnableTriggerBehavior() {
+		enableTriggerBehavior = true;
+	}
+
+	public void DisableTriggerBehavior() {
+		enableTriggerBehavior = false;
 	}
 }

@@ -1,9 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
-// attach this script to the parent object containing all the rope fragments
-// a rope is made up of many fragments
-public class ManualRope : MonoBehaviour {
+// attach this script to the parent rope object containing all the rope fragments
+public class RopeModel : MonoBehaviour {
+
+	//** PUBLIC VARIABLES **//
 
 	public GameObject fragmentPrefab;
 		
@@ -34,18 +35,20 @@ public class ManualRope : MonoBehaviour {
 	// num of fragments that should become anchored to a shell
 	public int anchoredFragsPerShell;
 
+	//** PRIVATE VARIABLES **//
+
 	// array containing the game objects of each rope fragment
-	GameObject[] ropeFragments; 
+	private GameObject[] ropeFragments; 
 
 	// array to record the ropeFragmentPosition so as to calculate the
 	// difference between the old and new position for the fragment
 	// that was moved by the user
-	Vector3[] ropeFragmentsPosition; 
+	private Vector3[] ropeFragmentsPosition; 
 
-	int numOfFragments;
+	private int numOfFragments;
 
 	// number referring to the most recent fragment moved by the player
-	int lastFragmentNumMovedByPlayer;
+	private int lastFragmentNumMovedByPlayer;
 
 	// total number of rope fragments attached to the parent rope object
 	// int numOfFragments;
@@ -53,18 +56,18 @@ public class ManualRope : MonoBehaviour {
 	// array that tracks whether fragments should be moveable
 	// e.g. 1st and last fragment should be immovable
 	// and fragments that have reached the seashell should be immovable
-	bool[] moveableFragments;
+	private bool[] moveableFragments;
 
-	bool ropeBroken = false;
+	private bool ropeBroken = false;
 
 	// various line renderers to draw lines between rope fragments
 	// and give the appearance of a rope to the user
-	LineRenderer ropeRenderer; 
-	LineRenderer brokenRopeRenderer1;
-	LineRenderer brokenRopeRenderer2;
+	private LineRenderer ropeRenderer; 
+	private LineRenderer brokenRopeRenderer1;
+	private LineRenderer brokenRopeRenderer2;
 
-	Color rendererStartColor;
-	Color rendererEndColor;
+	private Color rendererStartColor;
+	private Color rendererEndColor;
 	
 	void Start() {
 
@@ -131,11 +134,43 @@ public class ManualRope : MonoBehaviour {
 		brokenRopeRenderer2.SetWidth(ropeWidth, ropeWidth);
 		brokenRopeRenderer2.SetColors(rendererStartColor, rendererEndColor);
 	}
-	
-	public bool IsFragmentMoveable(GameObject fragmentMoved) {
-		return moveableFragments[GetFragmentNumber(fragmentMoved)];
-	}
 
+	// called by RopeFragmentAnchorController to anchor 
+	// fragments near the seashell (i.e. make immovable); 
+	// the number of fragments to anchor is referenced in anchoredFragsPerShell
+	public void AnchorFragments(GameObject fragmentMoved, GameObject anchor) {
+		int fragmentNum = GetFragmentNumber(fragmentMoved);
+		lastFragmentNumMovedByPlayer = fragmentNum;
+		
+		int upperLimit = fragmentNum + anchoredFragsPerShell/2 + 1;
+		int lowerLimit = upperLimit - anchoredFragsPerShell;
+		
+		if (upperLimit > numOfFragments) {
+			Debug.Log("Exceeded legal values for upper limit. Try specifying a smaller limit.");
+			return;
+		}
+		
+		if (lowerLimit < 0) {
+			Debug.Log("Exceeded legal values for lower limit. Try specifying a smaller limit.");
+			return;
+		}
+		
+		// example of what the loop is doing:
+		//		iteration 1, fix fragment 10 position
+		// 		iteration 2, fix fragment 9 and 11 position (they share same x coordinate)
+		// 		iteration 3, fix fragment 8 and 12 position (they share same x coordinate)
+		// 		etc.
+		for (int d = 0; d < (anchoredFragsPerShell/2 + 1); d++) {
+			
+			int upper = fragmentNum + d;
+			int lower = fragmentNum - d;
+			
+			// set that fragment to be immovable
+			moveableFragments[upper] = false;
+			moveableFragments[lower] = false;
+		}
+	}
+	
 	// get the fragment number from the fragment that was moved
 	public int GetFragmentNumber(GameObject fragmentMoved) {
 		int fragmentNum;
@@ -147,7 +182,11 @@ public class ManualRope : MonoBehaviour {
 		return fragmentNum;
 	}
 
-	// called by the ManualRopeController to move the moveable rope fragments,
+	public bool IsFragmentMoveable(GameObject fragmentMoved) {
+		return moveableFragments[GetFragmentNumber(fragmentMoved)];
+	}
+
+	// called by the RopeFragmentController to move moveable rope fragments,
 	// given that the player has dragged a particular fragment
 	public void MoveRope(GameObject fragmentMoved, Vector3 position) {
 
@@ -242,42 +281,6 @@ public class ManualRope : MonoBehaviour {
 	float Sigmoid(float x) {
 		return 1.0f / ( 1.0f + Mathf.Exp(-x) );
 	}
-	
-	// called by ManualRopeControllerAnchor to anchor 
-	// fragments near the seashell (i.e. make immovable); 
-	// the number of fragments to anchor is referenced in anchoredFragsPerShell
-	public void AnchorFragments(GameObject fragmentMoved, GameObject anchor) {
-		int fragmentNum = GetFragmentNumber(fragmentMoved);
-		lastFragmentNumMovedByPlayer = fragmentNum;
-		
-		int upperLimit = fragmentNum + anchoredFragsPerShell/2 + 1;
-		int lowerLimit = upperLimit - anchoredFragsPerShell;
-		
-		if (upperLimit > numOfFragments) {
-			Debug.Log("Exceeded legal values for upper limit. Try specifying a smaller limit.");
-			return;
-		}
-		
-		if (lowerLimit < 0) {
-			Debug.Log("Exceeded legal values for lower limit. Try specifying a smaller limit.");
-			return;
-		}
-		
-		// example of what the loop is doing:
-		//		iteration 1, fix fragment 10 position
-		// 		iteration 2, fix fragment 9 and 11 position (they share same x coordinate)
-		// 		iteration 3, fix fragment 8 and 12 position (they share same x coordinate)
-		// 		etc.
-		for (int d = 0; d < (anchoredFragsPerShell/2 + 1); d++) {
-			
-			int upper = fragmentNum + d;
-			int lower = fragmentNum - d;
-			
-			// set that fragment to be immovable
-			moveableFragments[upper] = false;
-			moveableFragments[lower] = false;
-		}
-	}
 
 	float CalculateRopeLength() {
 		float lengthOfRope = 0.0f;
@@ -332,5 +335,4 @@ public class ManualRope : MonoBehaviour {
 
 		return;
 	}
-
 }

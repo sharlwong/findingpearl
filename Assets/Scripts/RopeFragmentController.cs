@@ -1,18 +1,18 @@
-﻿using UnityEngine;
+using UnityEngine;
 using System.Collections;
 
 // attach this script to each rope fragment
-public class ManualRopeController : MonoBehaviour {
+public class RopeFragmentController : MonoBehaviour {
 
-	ManualRope manualRope;
+	private RopeModel ropeModel;
 	private Vector3 screenPoint;
 	private Vector3 offset;
 
 	void Start() {
 
 		// the parent of each rope fragment would be the overall Rope object, containing 
-		// the ManualRope script component, so we retrieve it here
-		manualRope = transform.parent.GetComponent<ManualRope>();
+		// the RopeModel script component, so we retrieve it here
+		ropeModel = transform.parent.GetComponent<RopeModel>();
 	}
 
 	void OnMouseDown() {
@@ -27,14 +27,14 @@ public class ManualRopeController : MonoBehaviour {
 		// i.e. the rest of the fragments not directly controlled by player
 		// should not have the triggering behavior
 		gameObject
-			.GetComponentInChildren<ManualRopeControllerAnchor>()
-			.enableTriggerBehavior = true;
+			.GetComponentInChildren<RopeFragmentAnchorController>()
+			.EnableTriggerBehavior();
 	}
 
 	void OnMouseDrag() {
 
 		// only update the transform of this rope fragment if it is moveable
-		if (manualRope.IsFragmentMoveable(gameObject)) {
+		if (ropeModel.IsFragmentMoveable(gameObject)) {
 
 			Vector3 updatedPosition 
 				= offset 
@@ -48,15 +48,14 @@ public class ManualRopeController : MonoBehaviour {
 			updatedPosition.y = transform.position.y;
 			updatedPosition.z = transform.position.z;
 
-			manualRope.MoveRope(gameObject, updatedPosition);
+			ropeModel.MoveRope(gameObject, updatedPosition);
 		}
 	}
-	
-	// KIV: attempt to model elasticity by moving back the rope to "rest" position smoothly
+
 	void OnMouseUp() {
 		gameObject
-			.GetComponentInChildren<ManualRopeControllerAnchor>()
-			.enableTriggerBehavior = false;
+			.GetComponentInChildren<RopeFragmentAnchorController>()
+			.DisableTriggerBehavior();
 	}
 
 	// note: touch controls still seem to work normally even without custom code
