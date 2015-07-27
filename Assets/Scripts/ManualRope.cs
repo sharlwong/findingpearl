@@ -11,27 +11,29 @@ public class ManualRope : MonoBehaviour {
 	public Vector3 lastFragmentPosition; // x,y should be same as the first fragment
 	public Vector3 fragmentInterval; // only along z axis for vertical rope 
 
-	// smoothness value scales the distance that neighboring fragments  
-	// will move with respect to the moved fragment for non-anchored fragments
-	public float ropeSmoothness;
+	// starting x coordinate to be put into the model
+	// model refers to how the fragments in the rope should move
+	// in this implementation, it is a sigmoid model
+	public float modelStartX;
+
+	// rate of decay of the model
+	public float modelDecayRate;
 
 	// rendered thickness of rope
 	public float ropeWidth;
 
 	// maximum length the rope can stretch before breaking
 	public float maxRopeLength;
+
+	public int brokenRopeGap;
 	
 	// GameObjects used to render a broken rope
 	public GameObject brokenRopeSegment1;
 	public GameObject brokenRopeSegment2;
 					
 	// num of fragments that should become anchored to a shell
-	public int numOfAnchoredFragments;
+	public int anchoredFragsPerShell;
 
-	// the x distance that fragments near the shell should move before
-	// becoming anchored, with respect to the seashell's anchor
-	public float anchoredFragmentsMoveAmount;
-	
 	// array containing the game objects of each rope fragment
 	GameObject[] ropeFragments; 
 
@@ -76,12 +78,12 @@ public class ManualRope : MonoBehaviour {
 		
 		Debug.Log("Number of fragments: " + numOfFragments);
 
-		// initialize and populate the respective arrays
+		// initialize the respective arrays
 		ropeFragments = new GameObject[numOfFragments];
 		ropeFragmentsPosition = new Vector3[numOfFragments];
 		moveableFragments = new bool[numOfFragments];
 
-
+		// instatiate fragments and populate the arrays
 		Vector3 position = firstFragmentPosition;
 
 		for (int i = 0; i < numOfFragments; i++) {
@@ -129,14 +131,13 @@ public class ManualRope : MonoBehaviour {
 		brokenRopeRenderer2.SetWidth(ropeWidth, ropeWidth);
 		brokenRopeRenderer2.SetColors(rendererStartColor, rendererEndColor);
 	}
-
-	// used by the controller to determine if a fragment is moveable
-	public bool isFragmentMoveable(GameObject fragmentMoved) {
-		return moveableFragments[getFragmentNumber(fragmentMoved)];
+	
+	public bool IsFragmentMoveable(GameObject fragmentMoved) {
+		return moveableFragments[GetFragmentNumber(fragmentMoved)];
 	}
 
 	// get the fragment number from the fragment that was moved
-	public int getFragmentNumber(GameObject fragmentMoved) {
+	public int GetFragmentNumber(GameObject fragmentMoved) {
 		int fragmentNum;
 		for (fragmentNum = 0; fragmentNum < numOfFragments; fragmentNum++) {
 			if (ropeFragments[fragmentNum] == fragmentMoved) {
@@ -146,89 +147,11 @@ public class ManualRope : MonoBehaviour {
 		return fragmentNum;
 	}
 
-	// called by ManualRopeControllerAnchor to move only a limited number of fragments
-	// near the anchor such that a nice arc can form around the seashell, 
-	// and set them as immovable thereafter
-	public void MoveLimitedRope(GameObject fragmentMoved, GameObject anchor, float anchorPosition) {
-		int fragmentNum = getFragmentNumber(fragmentMoved);
-		lastFragmentNumMovedByPlayer = fragmentNum;
-
-		int upperLimit = fragmentNum + numOfAnchoredFragments/2 + 1;
-		int lowerLimit = upperLimit - numOfAnchoredFragments;
-
-		if (upperLimit > numOfFragments) {
-			Debug.Log("Exceeded legal values for upper limit. Try specifying a smaller limit.");
-			return;
-		}
-
-		if (lowerLimit < 0) {
-			Debug.Log("Exceeded legal values for lower limit. Try specifying a smaller limit.");
-			return;
-		}
-
-
-		// example of what the loop is doing:
-		//		iteration 1, fix fragment 10 position
-		// 		iteration 2, fix fragment 9 and 11 position (they share same x coordinate)
-		// 		iteration 3, fix fragment 8 and 12 position (they share same x coordinate)
-		// 		etc.
-		//
-		// 		example: position fragments to surround left side of the seashell,
-		//		given that fragment 10 is the fragment that collided with the seashell's anchor
-		//		
-		//					...
-		//				fragment 12
-		//			fragment 11
-		//		fragment 10		(seashell)
-		//			fragment 9
-		//				fragment 8
-		//					...
-		float newX = anchorPosition;
-
-		for (int d = 0; d < (numOfAnchoredFragments/2 + 1); d++) {
-
-			int upper = fragmentNum + d;
-			int lower = fragmentNum - d;
-
-			// update position
-			Vector3 newPositionAbove = new Vector3(newX, 
-			                                       ropeFragmentsPosition[upper].y, 
-			                                       ropeFragmentsPosition[upper].z);
-			Vector3 newPositionBelow = new Vector3(newX, 
-			                                       ropeFragmentsPosition[lower].y, 
-			                                       ropeFragmentsPosition[lower].z);
-
-			ropeFragments[upper].transform.position = newPositionAbove;
-			ropeFragments[lower].transform.position = newPositionBelow;
-
-			ropeFragmentsPosition[upper] = newPositionAbove;
-			ropeFragmentsPosition[lower] = newPositionBelow;
-
-			// set that fragment to be immovable
-			moveableFragments[upper] = false;
-			moveableFragments[lower] = false;
-
-			// ** calculate the x coordinate for the next fragment **//
-
-			// if anchor is on the left side of the screen, then the neighboring fragments
-			// near to the seashell should be moved towards the right of the anchor
-			// i.e. newX should increase
-			if (anchor.name == "Left Anchor") {
-				newX += anchoredFragmentsMoveAmount;
-			} 
-
-			// else, do the reverse, i.e. newX should decrease
-			else {
-				newX -= anchoredFragmentsMoveAmount;
-			}
-		}
-	}
-
 	// called by the ManualRopeController to move the moveable rope fragments,
 	// given that the player has dragged a particular fragment
 	public void MoveRope(GameObject fragmentMoved, Vector3 position) {
 
-		int fragmentNum = getFragmentNumber(fragmentMoved);
+		int fragmentNum = GetFragmentNumber(fragmentMoved);
 		lastFragmentNumMovedByPlayer = fragmentNum;
 
 		// return if the fragment is not moveable
@@ -242,36 +165,57 @@ public class ManualRope : MonoBehaviour {
 		// compute difference in old and new position
 		float newX = fragmentMoved.transform.position.x;
 		float oldX = ropeFragmentsPosition[fragmentNum].x;
-		float delta = newX - oldX;
+		float distanceMovedByPlayer = newX - oldX;
 
 		// then update the array storing the positions with the new position
 		ropeFragmentsPosition[fragmentNum] = fragmentMoved.transform.position;	
 
 		// then invoke recursive call to move neighboring fragments
 		// both above and below the fragment that was moved (hence two calls)
-		MoveFragment(fragmentNum-1, -1, delta);
-		MoveFragment(fragmentNum+1, 1, delta);
+		MoveFragment(fragmentNum-1, -1, distanceMovedByPlayer, modelStartX);
+		MoveFragment(fragmentNum+1, 1, distanceMovedByPlayer, modelStartX);
 	}
 
 	// recursively move neighboring rope fragments
-	// delta is the distance between the old X position and the new X position
-	void MoveFragment(int fragmentNumber, int direction, float delta) {
+	//
+	// distanceMovedByPlayer is unchanged between subsequent recursive calls to MoveFragment
+	//
+	// x is the input to the sigmoid function
+	void MoveFragment(int fragmentNumber, int direction, float distanceMovedByPlayer, float x) {
 
 		// base case: return if reached the fragments at the start and at the end
 		if ( (fragmentNumber <= 0) || ((fragmentNumber+1) >= numOfFragments) ) {
 			return;
 		}
-
-		// calculate how much to move the neighbor fragment by using a scale factor
-		// currently uses a simple scale factor (more sophisticated math could be used)
-		delta = ropeSmoothness * delta;
-
+		
 		if (moveableFragments[fragmentNumber] == true) {
+
+			// calculate amountToMoveInX using a sigmoid model;
+			//
+			// for fragments near to the first fragment,
+			// we want those fragments to move a lot so that the curve is smooth
+			// i.e. the amountToMoveInX is high;
+			//
+			// but as we try to move further fragments in subsequent recursive calls, 
+			// the amountToMoveInX should be lesser;
+			//
+			// and for the fragments very far away, we don't want much movement at all
+			// so the amountToMoveInX should tend to zero
+			//
+			// therefore the sigmoid is a suitable model;
+			//
+			// the input to the sigmoid function should gradually decrease,
+			// as we want the sigmoid value to start high, but end low;
+			// sketch out the curve to visualize this better;
+			//
+			// don't forget to tune the parameters; 
+			// alternative models can be considered too
+			float amountToMoveInX = Sigmoid(x) * distanceMovedByPlayer;
 
 			// rope fragment is restricted to move only in the x axis direction
 			// (i.e. left and right, with respect to a vertically oriented rope in game)
 			Vector3 newPosition =  ropeFragmentsPosition[fragmentNumber]
-									+ new Vector3(delta, 0.0f, 0.0f);
+									+ new Vector3(amountToMoveInX, 0.0f, 0.0f);
 
 			// update the array that stores the positions
 			ropeFragmentsPosition[fragmentNumber] = newPosition;
@@ -281,18 +225,60 @@ public class ManualRope : MonoBehaviour {
 
 		}
 
+		x = x - modelDecayRate;
 
 		// update the fragment below with respect to the rope in game
 		if (direction < 0) {
-			MoveFragment(fragmentNumber-1, direction, delta);
+			MoveFragment(fragmentNumber-1, direction, distanceMovedByPlayer, x);
 		}
 
 		// update the fragment above with respect to the rope in game
 		else {
-			MoveFragment(fragmentNumber+1, direction, delta);
+			MoveFragment(fragmentNumber+1, direction, distanceMovedByPlayer, x);
 		}
 	}
+
+	// compute the sigmoid value
+	float Sigmoid(float x) {
+		return 1.0f / ( 1.0f + Mathf.Exp(-x) );
+	}
 	
+	// called by ManualRopeControllerAnchor to anchor 
+	// fragments near the seashell (i.e. make immovable); 
+	// the number of fragments to anchor is referenced in anchoredFragsPerShell
+	public void AnchorFragments(GameObject fragmentMoved, GameObject anchor) {
+		int fragmentNum = GetFragmentNumber(fragmentMoved);
+		lastFragmentNumMovedByPlayer = fragmentNum;
+		
+		int upperLimit = fragmentNum + anchoredFragsPerShell/2 + 1;
+		int lowerLimit = upperLimit - anchoredFragsPerShell;
+		
+		if (upperLimit > numOfFragments) {
+			Debug.Log("Exceeded legal values for upper limit. Try specifying a smaller limit.");
+			return;
+		}
+		
+		if (lowerLimit < 0) {
+			Debug.Log("Exceeded legal values for lower limit. Try specifying a smaller limit.");
+			return;
+		}
+		
+		// example of what the loop is doing:
+		//		iteration 1, fix fragment 10 position
+		// 		iteration 2, fix fragment 9 and 11 position (they share same x coordinate)
+		// 		iteration 3, fix fragment 8 and 12 position (they share same x coordinate)
+		// 		etc.
+		for (int d = 0; d < (anchoredFragsPerShell/2 + 1); d++) {
+			
+			int upper = fragmentNum + d;
+			int lower = fragmentNum - d;
+			
+			// set that fragment to be immovable
+			moveableFragments[upper] = false;
+			moveableFragments[lower] = false;
+		}
+	}
+
 	float CalculateRopeLength() {
 		float lengthOfRope = 0.0f;
 		for (int i = 0; i < (numOfFragments-1); i++) {
@@ -310,27 +296,30 @@ public class ManualRope : MonoBehaviour {
 		}
 
 		if (CalculateRopeLength() > maxRopeLength) {
-			Debug.Log("Rope has been broken!");
+			Debug.Log("Rope has been broken at fragment number " + lastFragmentNumMovedByPlayer);
 			ropeBroken = true;
 
-			// first, undraw the rope 
-			GetComponent<LineRenderer>().SetVertexCount(0);
+			// first, undraw the main rope 
+			ropeRenderer.SetVertexCount(0);
 
-			// then, draw the two broken rope segments from the point of breakage
+			// ** then, draw the two broken rope segments from the point of breakage ** //
+
+			// equally allocated the specified gap between the first and second rope segment
+			int halfGap = brokenRopeGap/2;
 
 			// draw the first rope segment
-			int numOfVertices = lastFragmentNumMovedByPlayer;
-			Debug.Log(numOfVertices);
+			int numOfVertices = lastFragmentNumMovedByPlayer - halfGap;
 			brokenRopeRenderer1.SetVertexCount(numOfVertices);
 			for (int i = 0; i < numOfVertices; i++) {
 				brokenRopeRenderer1.SetPosition(i, ropeFragmentsPosition[i]);
 			}
 
 			// draw the second rope segment
-			numOfVertices = numOfFragments - lastFragmentNumMovedByPlayer;
+			numOfVertices = (numOfFragments-1) - lastFragmentNumMovedByPlayer - halfGap;
 			brokenRopeRenderer2.SetVertexCount(numOfVertices);
 			for (int i = 0; i < numOfVertices; i++) {
-				brokenRopeRenderer2.SetPosition(i, ropeFragmentsPosition[i+lastFragmentNumMovedByPlayer]);
+				brokenRopeRenderer2
+					.SetPosition(i, ropeFragmentsPosition[i+1+lastFragmentNumMovedByPlayer+halfGap]);
 			}
 
 			return;

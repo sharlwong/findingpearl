@@ -34,7 +34,7 @@ public class ManualRopeController : MonoBehaviour {
 	void OnMouseDrag() {
 
 		// only update the transform of this rope fragment if it is moveable
-		if (manualRope.isFragmentMoveable(gameObject)) {
+		if (manualRope.IsFragmentMoveable(gameObject)) {
 
 			Vector3 updatedPosition 
 				= offset 

@@ -32,11 +32,12 @@ public class ManualRopeControllerAnchor : MonoBehaviour {
 	}
 
 	void OnTriggerEnter(Collider other) {
+		enableTriggerBehavior = true;
 		if (enableTriggerBehavior) {
-			if (other.gameObject.name == "Left Anchor" || other.gameObject.name == "Right Anchor") {
-				manualRope.MoveLimitedRope(transform.parent.gameObject, 
-				                           other.gameObject, 
-				                           other.transform.position.x);
+			if (other.gameObject.name == "Anchor") {
+
+				manualRope.AnchorFragments(transform.parent.gameObject, 
+				                           other.gameObject);
 
 				scoreController.IncrementScore(100);
 			}
