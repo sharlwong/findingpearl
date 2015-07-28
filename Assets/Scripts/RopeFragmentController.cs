@@ -21,14 +21,6 @@ public class RopeFragmentController : MonoBehaviour {
 										new Vector3(Input.mousePosition.x, 
 		            								Input.mousePosition.y, 
 		            								screenPoint.z));
-
-		// only enable triggering behavior in the child script
-		// when the player is directly moving this fragment
-		// i.e. the rest of the fragments not directly controlled by player
-		// should not have the triggering behavior
-		gameObject
-			.GetComponentInChildren<RopeFragmentAnchorController>()
-			.EnableTriggerBehavior();
 	}
 
 	void OnMouseDrag() {
@@ -53,9 +45,7 @@ public class RopeFragmentController : MonoBehaviour {
 	}
 
 	void OnMouseUp() {
-		gameObject
-			.GetComponentInChildren<RopeFragmentAnchorController>()
-			.DisableTriggerBehavior();
+
 	}
 
 	// note: touch controls still seem to work normally even without custom code

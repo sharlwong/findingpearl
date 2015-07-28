@@ -33,7 +33,7 @@ public class RopeModel : MonoBehaviour {
 	public GameObject brokenRopeSegment2;
 					
 	// num of fragments that should become anchored to a shell
-	public int anchoredFragsPerShell;
+	public int neighborFragsToAnchor;
 
 	//** PRIVATE VARIABLES **//
 
@@ -135,39 +135,39 @@ public class RopeModel : MonoBehaviour {
 		brokenRopeRenderer2.SetColors(rendererStartColor, rendererEndColor);
 	}
 
-	// called by RopeFragmentAnchorController to anchor 
-	// fragments near the seashell (i.e. make immovable); 
-	// the number of fragments to anchor is referenced in anchoredFragsPerShell
-	public void AnchorFragments(GameObject fragmentMoved, GameObject anchor) {
+	// called by RopeFragmentAnchorController to anchor a single fragment
+	public void AnchorFragment(GameObject fragmentMoved) {
 		int fragmentNum = GetFragmentNumber(fragmentMoved);
 		lastFragmentNumMovedByPlayer = fragmentNum;
-		
-		int upperLimit = fragmentNum + anchoredFragsPerShell/2 + 1;
-		int lowerLimit = upperLimit - anchoredFragsPerShell;
-		
+		moveableFragments[fragmentNum] = false;
+	}
+
+	// called by RopeFragmentAnchorController to anchor 
+	// neighboring fragments relative to fragmentMoved
+	// the number of neighbors to anchor is referenced in neighborFragsToAnchor
+	public void AnchorNeighborFragments(GameObject fragmentMoved) {
+		int fragmentNum = GetFragmentNumber(fragmentMoved);
+		int upperLimit = fragmentNum + neighborFragsToAnchor/2 + 1;
+		int lowerLimit = upperLimit - neighborFragsToAnchor;
+
 		if (upperLimit > numOfFragments) {
 			Debug.Log("Exceeded legal values for upper limit. Try specifying a smaller limit.");
 			return;
 		}
-		
+
 		if (lowerLimit < 0) {
 			Debug.Log("Exceeded legal values for lower limit. Try specifying a smaller limit.");
 			return;
 		}
-		
+
 		// example of what the loop is doing:
-		//		iteration 1, fix fragment 10 position
-		// 		iteration 2, fix fragment 9 and 11 position (they share same x coordinate)
-		// 		iteration 3, fix fragment 8 and 12 position (they share same x coordinate)
+		//		say the fragmentNum is 10
+		// 		iteration 1, fix fragment 9 and 11 position
+		// 		iteration 2, fix fragment 8 and 12 position
 		// 		etc.
-		for (int d = 0; d < (anchoredFragsPerShell/2 + 1); d++) {
-			
-			int upper = fragmentNum + d;
-			int lower = fragmentNum - d;
-			
-			// set that fragment to be immovable
-			moveableFragments[upper] = false;
-			moveableFragments[lower] = false;
+		for (int d = 1; d < (neighborFragsToAnchor/2 + 1); d++) {
+			moveableFragments[fragmentNum+d] = false;
+			moveableFragments[fragmentNum-d] = false;
 		}
 	}
 	

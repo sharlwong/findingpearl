@@ -18,37 +18,16 @@ using System.Collections;
 public class RopeFragmentAnchorController : MonoBehaviour {
 		
 	private RopeModel ropeModel;
-	private ScoreController scoreController;
-	private bool enableTriggerBehavior;
-
+	
 	void Start () {
 		ropeModel = transform.parent.parent.GetComponent<RopeModel>();
-
-		// cannot attach a reference in the scene to a prefab and automatically
-		// apply that to all prefabs; therefore we to have use find instead
-		scoreController = (ScoreController) FindObjectOfType(typeof(ScoreController));
-
-		// triggering behavior is off by default
-		DisableTriggerBehavior();
 	}
 
 	void OnTriggerEnter(Collider other) {
-		if (enableTriggerBehavior) {
-			if (other.gameObject.name == "Seashell Anchor") {
-
-				ropeModel.AnchorFragments(transform.parent.gameObject, 
-				                          other.gameObject);
-
-				scoreController.IncrementScore(100);
-			}
+		if (other.gameObject.name == "Seashell Anchor") {
+			GameObject fragment = transform.parent.gameObject;
+			ropeModel.AnchorFragment(fragment);
+			ropeModel.AnchorNeighborFragments(fragment);
 		}
-	}
-
-	public void EnableTriggerBehavior() {
-		enableTriggerBehavior = true;
-	}
-
-	public void DisableTriggerBehavior() {
-		enableTriggerBehavior = false;
 	}
 }
