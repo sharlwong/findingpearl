@@ -21,6 +21,10 @@ public class SeashellAnchorController : MonoBehaviour {
 			if (!scoreIncreased) {
 				scoreController.IncrementScore(100);
 				scoreIncreased = true;
+
+				// alter the color (tint) of the seashell
+				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); // logs "Turqoise-shell-shadow (Instance)"
+				GetComponentsInParent<Renderer>()[1].material.SetColor("_Color", new Color32(255,255,100,255));
 			}
 		}
 	}
