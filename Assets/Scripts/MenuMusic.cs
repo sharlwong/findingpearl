@@ -15,7 +15,7 @@ public class MenuMusic : MonoBehaviour {
 	}
 	
 	void Update () {
-		if(Application.loadedLevelName == "RopeScene")
+		if(Application.loadedLevelName == "Level 1")
 		{
 			GetComponent<AudioSource>().Stop();
 			AudioBegin = false;
