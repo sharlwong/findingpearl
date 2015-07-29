@@ -1,7 +1,10 @@
 ﻿using UnityEngine;
 using System.Collections;
 
+// attach this script to each Seashell Anchor
 public class SeashellAnchorController : MonoBehaviour {
+
+	public int valueOfShell;
 
 	private bool scoreIncreased;
 	private ScoreController scoreController;
@@ -15,35 +18,68 @@ public class SeashellAnchorController : MonoBehaviour {
 		scoreIncreased = false;
 		originalColor = GetComponentsInParent<Renderer>()[1].material.color;
 	}
-	
-	void OnTriggerEnter(Collider other) {
 
-		// "Anchor Collider" refers to the child object attached to each Rope Fragment object
-		if (other.gameObject.name == "Anchor Collider") {
+	// had to change approach to the score update;
+	// originally used OnTriggerEnter and OnTriggerExit
+	// to increase and decrease the score,
+	// however, after increasing the score once,
+	// a single fragment leaving the shell and calling OnTriggerExit()
+	// will cause the score to decrease even though there
+	// are other fragments still in contact with the shell anchor.
+	//
+	// now we use Physics.OverlapSphere to count how many fragments 
+	// are in contact the shell instead; if there is  >= 1 fragment
+	// inside, the score will be increased (if it hasn't been increased),
+	// otherwise, it will be decreased (if it hasn't been decreased).
+	void Update() {
+		if (RopeOverlapsWithCollider()) {
 
-			// only increment the score once
+			// only increment score once
 			if (!scoreIncreased) {
-				scoreController.IncrementScore(100);
+				scoreController.IncrementScore(valueOfShell);
 				scoreIncreased = true;
 
 				// alter the color (tint) of the seashell
-				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); // logs "Turqoise-shell-shadow (Instance)"
+				// to show the player that the score has increased
+				// as a result of this seashell overlapping with the rope
+
+				// logs "Turqoise-shell-shadow (Instance)"
+				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); 
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", new Color32(255,255,100,255));
 			}
-		}
-	}
-	
-	void OnTriggerExit(Collider other) {
+		} 
 
-		if (other.gameObject.name == "Anchor Collider") {
-
+		else {
 			if (scoreIncreased) {
-				scoreController.DecrementScore(100);
+				scoreController.DecrementScore(valueOfShell);
 				scoreIncreased = false;
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", originalColor);
 			}
 		}
+	}
+	
+	bool RopeOverlapsWithCollider() {
+		if (GetNumOfOverlappingRopeFragments() == 0) {
+			return false;
+		} else {
+			return true;
+		}
+	}
+
+	int GetNumOfOverlappingRopeFragments() {
+		Vector3 parentPosition = transform.parent.transform.position;
+		SphereCollider col = transform.GetComponent<SphereCollider>();
+		Collider[] colliders = Physics.OverlapSphere(parentPosition, col.radius);
+		
+		int numOfRopeFragmentsOverlapping = 0;
+		foreach (Collider collider in colliders) {
+			if (collider.name == "Anchor Collider") {
+				numOfRopeFragmentsOverlapping++;
+			}
+		}
+
+		return numOfRopeFragmentsOverlapping;
 	}
 }
