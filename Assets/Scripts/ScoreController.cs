@@ -12,9 +12,20 @@ public class ScoreController : MonoBehaviour {
 		score = 0;
 		SetScoreText();
 	}
-	
+
 	public void IncrementScore(int amount) {
 		score += amount;
+		SetScoreText();
+	}
+
+	public void DecrementScore(int amount) {
+		if (score > 0)
+			score -= amount;
+		SetScoreText();
+	}
+
+	public void RopeBreaks() {
+		score = 0;
 		SetScoreText();
 	}
 

@@ -305,6 +305,11 @@ public class RopeModel : MonoBehaviour {
 			// first, undraw the main rope 
 			ropeRenderer.SetVertexCount(0);
 
+			// and set all of its fragments to be immovable
+			for (int i = 0; i < numOfFragments; i++) {
+				moveableFragments[i] = false;
+			}
+
 			// ** then, draw the two broken rope segments from the point of breakage ** //
 
 			// equally allocated the specified gap between the first and second rope segment
@@ -324,6 +329,9 @@ public class RopeModel : MonoBehaviour {
 				brokenRopeRenderer2
 					.SetPosition(i, ropeFragmentsPosition[i+1+lastFragmentNumMovedByPlayer+halfGap]);
 			}
+
+			// update score
+			((ScoreController) FindObjectOfType(typeof(ScoreController))).RopeBreaks();
 
 			return;
 		}
