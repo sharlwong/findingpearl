@@ -7,15 +7,28 @@ public class ScoreController : MonoBehaviour {
 	public Text scoreText;
 
 	private int score;
+	private Object[] shellsArray;
+	private int maxScore;
 	
 	void Start() {
 		score = 0;
 		SetScoreText();
+
+		shellsArray = FindObjectsOfType(typeof(SeashellAnchorController));
+
+		foreach(Object shell in shellsArray) {
+			SeashellAnchorController actualShell = (SeashellAnchorController) shell;
+			maxScore += actualShell.valueOfShell;
+		}
 	}
 
 	public void IncrementScore(int amount) {
 		score += amount;
 		SetScoreText();
+
+		if (score == maxScore) {
+			GameEnd();
+		}
 	}
 
 	public void DecrementScore(int amount) {
@@ -27,6 +40,7 @@ public class ScoreController : MonoBehaviour {
 	public void RopeBreaks() {
 		score = 0;
 		SetScoreText();
+		GameEnd();
 	}
 
 	public void SetScoreText() {
@@ -35,5 +49,11 @@ public class ScoreController : MonoBehaviour {
 
 	public int getScore() {
 		return score;
+	}
+
+	private void GameEnd() {
+		PlayerPrefs.SetInt (Application.loadedLevelName, score);
+		PlayerPrefs.Save ();
+		Application.LoadLevel("TransitionScene");
 	}
 }
