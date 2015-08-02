@@ -60,14 +60,16 @@ public class RopeModel : MonoBehaviour {
 
 	private bool ropeBroken = false;
 
+	private float initialRopeLength;
+
 	// various line renderers to draw lines between rope fragments
 	// and give the appearance of a rope to the user
 	private LineRenderer ropeRenderer; 
 	private LineRenderer brokenRopeRenderer1;
 	private LineRenderer brokenRopeRenderer2;
 
-	private Color rendererStartColor;
-	private Color rendererEndColor;
+	private Color initialRendererColor;
+	private Color currentRendererColor;
 	
 	void Start() {
 
@@ -114,25 +116,24 @@ public class RopeModel : MonoBehaviour {
 			position += fragmentInterval;
 		}
 
+		initialRopeLength = CalculateRopeLength();
+
 		// ** assign values to the various line renderers and set some properties ** //
 
 		// these colors also interact with the material and its tint attached to the renderer;
 		// i.e. don't expect the rendered rope to take on the exact same color specified here
-		rendererStartColor = new Color32(147,149,152,255);
-		rendererEndColor = new Color32(147,149,152,255);
+		initialRendererColor = new Color32(147,149,152,255);
 
 		ropeRenderer = GetComponent<LineRenderer>(); 
 		ropeRenderer.SetVertexCount(numOfFragments);
 		ropeRenderer.SetWidth(ropeWidth, ropeWidth);
-		ropeRenderer.SetColors(rendererStartColor, rendererEndColor);
+		ropeRenderer.SetColors(initialRendererColor, initialRendererColor);
 
 		brokenRopeRenderer1 = brokenRopeSegment1.GetComponent<LineRenderer>();
 		brokenRopeRenderer1.SetWidth(ropeWidth, ropeWidth);
-		brokenRopeRenderer1.SetColors(rendererStartColor, rendererEndColor);
 
 		brokenRopeRenderer2 = brokenRopeSegment2.GetComponent<LineRenderer>();
 		brokenRopeRenderer2.SetWidth(ropeWidth, ropeWidth);
-		brokenRopeRenderer2.SetColors(rendererStartColor, rendererEndColor);
 	}
 
 	// called by RopeFragmentAnchorController to anchor a single fragment
@@ -282,6 +283,34 @@ public class RopeModel : MonoBehaviour {
 		return 1.0f / ( 1.0f + Mathf.Exp(-x) );
 	}
 
+	// as the rope gets increasingly stretched, alter the color and alpha
+	void UpdateRopeColor() {
+
+		float ropeStretchAmount = CalculateRopeLength() - initialRopeLength;
+		float fractionalIncrease = ropeStretchAmount / initialRopeLength;
+
+		// don't do anything if the stretch amount decreases
+		if (fractionalIncrease <= 0) {
+			return;
+		}
+
+		// rgb values range from 0 to 1 (not 0 to 255!)
+		// initialRendererColor is unchanged throughout the game
+		float initialRed = initialRendererColor.r;
+		float initialGreen = initialRendererColor.g;
+		float initialBlue = initialRendererColor.b;
+		float initialAlpha = initialRendererColor.a;
+
+		// TOOD: how should the color and alpha change as the rope is stretched?
+		float newRed = initialRed;//fractionalIncrease*initialRed*0.5f;
+		float newGreen = initialGreen;//+ fractionalIncrease*initialGreen*0.5f;
+		float newBlue = initialBlue;// + fractionalIncrease*initialBlue*0.5f;
+		float newAlpha = initialAlpha - fractionalIncrease*1.2f;
+
+		currentRendererColor = new Color(newRed, newGreen, newBlue, newAlpha);
+		ropeRenderer.SetColors(currentRendererColor, currentRendererColor);
+	}
+
 	float CalculateRopeLength() {
 		float lengthOfRope = 0.0f;
 		for (int i = 0; i < (numOfFragments-1); i++) {
@@ -289,6 +318,10 @@ public class RopeModel : MonoBehaviour {
 		}
 		// Debug.Log("Length of rope: " + lengthOfRope);
 		return lengthOfRope;
+	}
+
+	void Update() {
+		UpdateRopeColor();
 	}
 
 	// called every frame, only after all Update functions have been called
@@ -317,6 +350,7 @@ public class RopeModel : MonoBehaviour {
 
 			// draw the first rope segment
 			int numOfVertices = lastFragmentNumMovedByPlayer - halfGap;
+			brokenRopeRenderer1.SetColors(currentRendererColor, currentRendererColor);
 			brokenRopeRenderer1.SetVertexCount(numOfVertices);
 			for (int i = 0; i < numOfVertices; i++) {
 				brokenRopeRenderer1.SetPosition(i, ropeFragmentsPosition[i]);
@@ -324,6 +358,7 @@ public class RopeModel : MonoBehaviour {
 
 			// draw the second rope segment
 			numOfVertices = (numOfFragments-1) - lastFragmentNumMovedByPlayer - halfGap;
+			brokenRopeRenderer2.SetColors(currentRendererColor, currentRendererColor);
 			brokenRopeRenderer2.SetVertexCount(numOfVertices);
 			for (int i = 0; i < numOfVertices; i++) {
 				brokenRopeRenderer2
