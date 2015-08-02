@@ -12,6 +12,10 @@ public class RopeModel : MonoBehaviour {
 	public Vector3 lastFragmentPosition; // x,y should be same as the first fragment
 	public Vector3 fragmentInterval; // only along z axis for vertical rope 
 
+	// the x coordinates of the left and right boundary
+	public float leftBoundaryX;
+	public float rightBoundaryX;
+
 	// starting x coordinate to be put into the model
 	// model refers to how the fragments in the rope should move
 	// in this implementation, it is a sigmoid model
@@ -199,6 +203,11 @@ public class RopeModel : MonoBehaviour {
 			return;
 		} 
 
+		// return if the new position of the fragment will exceed the boundaries
+		if (position.x <= leftBoundaryX || position.x >= rightBoundaryX) {
+			return;
+		}
+
 		// update the position of the fragment
 		fragmentMoved.transform.position = position;
 
@@ -257,11 +266,19 @@ public class RopeModel : MonoBehaviour {
 			Vector3 newPosition =  ropeFragmentsPosition[fragmentNumber]
 									+ new Vector3(amountToMoveInX, 0.0f, 0.0f);
 
-			// update the array that stores the positions
-			ropeFragmentsPosition[fragmentNumber] = newPosition;
+			// return if the new position of the fragment will exceed the boundaries
+			if (newPosition.x <= leftBoundaryX || newPosition.x >= rightBoundaryX) {
+				return;
+			}
 
-			// also update the actual position of the fragment
-			ropeFragments[fragmentNumber].transform.position = newPosition;
+			else {
+
+				// update the array that stores the positions
+				ropeFragmentsPosition[fragmentNumber] = newPosition;
+
+				// also update the actual position of the fragment
+				ropeFragments[fragmentNumber].transform.position = newPosition;
+			}
 
 		}
 
