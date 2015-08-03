@@ -52,8 +52,17 @@ public class ScoreController : MonoBehaviour {
 	}
 
 	private void GameEnd() {
+		//save the score globally
 		PlayerPrefs.SetInt (Application.loadedLevelName, score);
 		PlayerPrefs.Save ();
+
+		//save current scene
+		PlayerPrefs.SetInt("LastLevel", Application.loadedLevel);
+		PlayerPrefs.Save();
+
+		PlayerPrefs.SetString("LastLevelName", Application.loadedLevelName);
+		PlayerPrefs.Save();
+
 		Application.LoadLevel("TransitionScene");
 	}
 }
