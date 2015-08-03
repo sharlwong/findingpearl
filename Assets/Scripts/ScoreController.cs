@@ -8,9 +8,14 @@ public class ScoreController : MonoBehaviour {
 	public Text scoreText;
 	public float timeRemaining;
 
+	public Text ropeBreakText;
+	public GameObject ropeBreakBG;
+	
 	private int score;
 	private Object[] shellsArray;
 	private int maxScore;
+
+	private float timer = 3f;
 	
 	void Start() {
 
@@ -47,6 +52,7 @@ public class ScoreController : MonoBehaviour {
 	void timeElapsed(){
 		CancelInvoke ("decreaseTimeRemaining");
 		timerText.text = "Time is Up!";
+
 		GameEnd();
 	}
 
@@ -68,8 +74,16 @@ public class ScoreController : MonoBehaviour {
 	public void RopeBreaks() {
 		score = 0;
 		SetScoreText();
+
+		ropeBreakBG.SetActive(true);
+		ropeBreakBG.GetComponent<Image>().canvasRenderer.SetAlpha(0.6f);
+		ropeBreakText.gameObject.SetActive(true);
+		ropeBreakText.text = "Oops! Your rope snapped! ):";
+
 		GameEnd();
+
 	}
+	
 
 	public void SetScoreText() {
 		scoreText.text = "RP: " + score.ToString();
