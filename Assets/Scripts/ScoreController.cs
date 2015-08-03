@@ -4,13 +4,20 @@ using System.Collections;
 
 public class ScoreController : MonoBehaviour {
 
+	public Text timerText;
 	public Text scoreText;
+	public float timeRemaining;
 
 	private int score;
 	private Object[] shellsArray;
 	private int maxScore;
 	
 	void Start() {
+
+		//Timer
+		InvokeRepeating ("decreaseTimeRemaining", 1.0F, 1.0F);
+
+		// Score
 		score = 0;
 		SetScoreText();
 
@@ -20,6 +27,27 @@ public class ScoreController : MonoBehaviour {
 			SeashellAnchorController actualShell = (SeashellAnchorController) shell;
 			maxScore += actualShell.valueOfShell;
 		}
+	}
+
+	void Update() {
+		if (timeRemaining == 0)
+		{
+			timeElapsed();
+		}
+		
+		timerText.text = "Time: " + timeRemaining;
+	}
+
+	// Countdown
+	void decreaseTimeRemaining() {
+		timeRemaining --;
+	}
+	
+	// Gameover because time has elapsed
+	void timeElapsed(){
+		CancelInvoke ("decreaseTimeRemaining");
+		timerText.text = "Time is Up!";
+		GameEnd();
 	}
 
 	public void IncrementScore(int amount) {
