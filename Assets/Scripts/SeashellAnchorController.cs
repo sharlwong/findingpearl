@@ -9,6 +9,9 @@ public class SeashellAnchorController : MonoBehaviour {
 	private bool scoreIncreased;
 	private ScoreController scoreController;
 	private Color32 originalColor;
+	private Vector3 shellPosition;
+	private SphereCollider col;
+	private float scale;
 	
 	void Start() {
 
@@ -17,6 +20,9 @@ public class SeashellAnchorController : MonoBehaviour {
 		scoreController = (ScoreController) FindObjectOfType(typeof(ScoreController));
 		scoreIncreased = false;
 		originalColor = GetComponentsInParent<Renderer>()[1].material.color;
+		shellPosition = transform.parent.transform.position;
+		col = transform.GetComponent<SphereCollider>();
+		scale = transform.localScale.x;
 	}
 
 	// had to change approach to the score update;
@@ -68,18 +74,29 @@ public class SeashellAnchorController : MonoBehaviour {
 		}
 	}
 
+	// uncomment this to see the size of the Physics.OverlapSphere in the scene
+//	void OnDrawGizmos() {
+//		Gizmos.color = Color.red;
+//		Gizmos.DrawWireSphere(shellPosition, col.radius*transform.localScale.x);
+//	}
+
 	int GetNumOfOverlappingRopeFragments() {
-		Vector3 parentPosition = transform.parent.transform.position;
-		SphereCollider col = transform.GetComponent<SphereCollider>();
-		Collider[] colliders = Physics.OverlapSphere(parentPosition, col.radius);
-		
+
+		// since our sphere collider itself has been scaled in the scene,
+		// the value of col.radius must also be scaled
+		// e.g. if we create a sphere, set its radius to 0.5, and then
+		// scale it to 0.1, 0.1, 0.1, the radius value is still 0.5, but
+		// the sphere is much smaller, so we need to scale the radius value here
+		Collider[] colliders = Physics.OverlapSphere(
+									shellPosition, 
+									col.radius*scale);
+
 		int numOfRopeFragmentsOverlapping = 0;
 		foreach (Collider collider in colliders) {
 			if (collider.name == "Anchor Collider") {
 				numOfRopeFragmentsOverlapping++;
 			}
 		}
-
 		return numOfRopeFragmentsOverlapping;
 	}
 }
