@@ -16,73 +16,49 @@ public class ScoreController : MonoBehaviour {
 	public AudioClip collectShellSound;
 
 	private AudioSource source;
-	
+	private RopeModel ropeModel;
+
 	private int score;
 	private Object[] shellsArray;
 	private int maxScore;
+	
 
+	// *** Public Methods *** //
 
-	void Start() {
-
+	public void Start() {
 		source = GetComponent<AudioSource>();
+		ropeModel = FindObjectOfType<RopeModel>();
 
-		//Timer
-		InvokeRepeating ("decreaseTimeRemaining", 1.0F, 1.0F);
-
-		// Score
 		score = 0;
+		maxScore = CalculateMaxScore();
 		SetScoreText();
 
-		shellsArray = FindObjectsOfType(typeof(SeashellAnchorController));
-
-		foreach(Object shell in shellsArray) {
-			SeashellAnchorController actualShell = (SeashellAnchorController) shell;
-			maxScore += actualShell.valueOfShell;
-		}
-	}
-
-	void Update() {
-		if (timeRemaining == 0)
-		{
-			timeElapsed();
-		}
-		
-		timerText.text = "Time: " + timeRemaining;
-	}
-
-	// Countdown
-	void decreaseTimeRemaining() {
-		timeRemaining --;
+		// Timer
+		InvokeRepeating ("DecreaseTimeRemaining", 1.0f, 1.0f);
 	}
 	
-	// Gameover because time has elapsed
-	void timeElapsed(){
-		CancelInvoke ("decreaseTimeRemaining");
-		timerText.text = "Time is Up!";
-
-		StartCoroutine(WhenTimesUp());
+	public void Update() {
+		if (timeRemaining == 0) {
+			timerText.text = "Time is Up!";
+			timeupText.gameObject.SetActive(true);
+			StartCoroutine(PrepareTransition());
+		}
+		SetTimerText();
 	}
 
-	IEnumerator WhenTimesUp() {
-		timeupText.gameObject.SetActive(true);
-		yield return new WaitForSeconds(2.5f);
-		GameEnd();
+	public int getScore() {
+		return score;
 	}
 
 	public void IncrementScore(int amount) {
 		source.PlayOneShot(collectShellSound);
 		score += amount;
 		SetScoreText();
-
+		
 		if (score == maxScore) {
-			StartCoroutine(WhenMaxScore());
+			winText.gameObject.SetActive(true);
+			StartCoroutine(PrepareTransition());
 		}
-	}
-
-	IEnumerator WhenMaxScore() {
-		winText.gameObject.SetActive(true);
-		yield return new WaitForSeconds(2.5f);
-		GameEnd();
 	}
 
 	public void DecrementScore(int amount) {
@@ -90,33 +66,52 @@ public class ScoreController : MonoBehaviour {
 			score -= amount;
 		SetScoreText();
 	}
-
+	
 	public void RopeBreaks() {
 		source.PlayOneShot(ropeSnapSound);
-		StartCoroutine(DoRopeBreak());
-	}
-
-	IEnumerator DoRopeBreak() {
 		score = 0;
 		SetScoreText();
 		ropeBreakText.gameObject.SetActive(true);
-		yield return new WaitForSeconds(2.5f);
-		GameEnd();
+		StartCoroutine(PrepareTransition());
+	}
+
+
+	// *** Private methods *** //
+	
+	private int CalculateMaxScore() {
+		int score = 0;
+		shellsArray = FindObjectsOfType(typeof(SeashellAnchorController));
+		foreach(Object shell in shellsArray) {
+			SeashellAnchorController actualShell = (SeashellAnchorController) shell;
+			score += actualShell.valueOfShell;
+		}
+		return score;
 	}
 	
-
-	public void SetScoreText() {
+	private	void SetScoreText() {
 		scoreText.text = "RP: " + score.ToString();
 	}
+	
+	private void SetTimerText() {
+		timerText.text = "Time: " + timeRemaining;
+	}
+	
+	private void DecreaseTimeRemaining() {
+		timeRemaining --;
+	}
 
-	public int getScore() {
-		return score;
+	private IEnumerator PrepareTransition() {
+		CancelInvoke("DecreaseTimeRemaining");
+		ropeModel.FreezeRope();
+		yield return new WaitForSeconds(2.0f);
+		GameEnd();
 	}
 
 	private void GameEnd() {
+
 		//save the score globally
-		PlayerPrefs.SetInt (Application.loadedLevelName, score);
-		PlayerPrefs.Save ();
+		PlayerPrefs.SetInt(Application.loadedLevelName, score);
+		PlayerPrefs.Save();
 
 		//save current scene
 		PlayerPrefs.SetInt("LastLevel", Application.loadedLevel);

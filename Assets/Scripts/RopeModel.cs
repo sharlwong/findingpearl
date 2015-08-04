@@ -191,6 +191,26 @@ public class RopeModel : MonoBehaviour {
 		return moveableFragments[GetFragmentNumber(fragmentMoved)];
 	}
 
+	public void FreezeRope() {
+		for (int i = 0; i < numOfFragments; i++) {
+			moveableFragments[i] = false;
+		}
+	}
+	
+	public void ResetRope() {
+		Vector3 position = firstFragmentPosition;
+		for (int i = 0; i < numOfFragments; i++) {
+			ropeFragmentsPosition[i] = position;
+			ropeFragments[i].transform.position = position;
+			if ( (i != 0) && (i != (numOfFragments-1)) ) {
+				moveableFragments[i] = true;
+			} else {
+				moveableFragments[i] = false;
+			}
+			position += fragmentInterval;
+		}
+	}
+
 	// called by the RopeFragmentController to move moveable rope fragments,
 	// given that the player has dragged a particular fragment
 	public void MoveRope(GameObject fragmentMoved, Vector3 position) {
@@ -356,9 +376,7 @@ public class RopeModel : MonoBehaviour {
 			ropeRenderer.SetVertexCount(0);
 
 			// and set all of its fragments to be immovable
-			for (int i = 0; i < numOfFragments; i++) {
-				moveableFragments[i] = false;
-			}
+			FreezeRope();
 
 			// ** then, draw the two broken rope segments from the point of breakage ** //
 
