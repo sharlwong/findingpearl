@@ -83,9 +83,6 @@ public class SeashellAnchorController : MonoBehaviour {
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", new Color32(255,255,100,255));
 
-
-
-
 				// show score earned with shell
 				StartCoroutine(ShowShellScore());
 			}
