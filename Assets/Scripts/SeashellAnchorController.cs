@@ -34,6 +34,23 @@ public class SeashellAnchorController : MonoBehaviour {
 		// Choose a random texture to render
 		selectedTexture = Random.Range (0, textures.Length);
 		transform.parent.GetComponent<Renderer>().material.SetTexture("_MainTex", textures[selectedTexture]);
+	
+		// Assign shell score only if the rope overlaps with the shell
+		shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
+		Debug.Log(shellTexture.ToString());
+		
+		if (shellTexture.ToString () == "Beige_Shell (UnityEngine.Texture2D)") {
+			Debug.Log ("Value of Beige_Shell");
+			valueOfShell = 10;
+		} else if (shellTexture.ToString () == "Yellow_Shell (UnityEngine.Texture2D)") {
+			Debug.Log ("Value of Yellow_Shell");
+			valueOfShell = 20;
+		} else if (shellTexture.ToString () == "Red_Shell (UnityEngine.Texture2D)") {
+			Debug.Log ("Value of Red_Shell");
+			valueOfShell = 30;
+			
+		}
+		
 	}
 	
 	// had to change approach to the score update;
@@ -67,21 +84,7 @@ public class SeashellAnchorController : MonoBehaviour {
 					.material.SetColor("_Color", new Color32(255,255,100,255));
 
 
-				// Assign shell score only if the rope overlaps with the shell
-				shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
-				Debug.Log(shellTexture.ToString());
 
-				if (shellTexture.ToString () == "Beige_Shell (UnityEngine.Texture2D)") {
-					Debug.Log ("Value of Beige_Shell");
-					valueOfShell = 10;
-				} else if (shellTexture.ToString () == "Yellow_Shell (UnityEngine.Texture2D)") {
-					Debug.Log ("Value of Yellow_Shell");
-					valueOfShell = 20;
-				} else if (shellTexture.ToString () == "Red_Shell (UnityEngine.Texture2D)") {
-					Debug.Log ("Value of Red_Shell");
-					valueOfShell = 30;
-					
-				}
 
 				// show score earned with shell
 				StartCoroutine(ShowShellScore());
