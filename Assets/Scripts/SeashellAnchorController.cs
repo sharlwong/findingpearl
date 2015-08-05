@@ -42,16 +42,6 @@ public class SeashellAnchorController : MonoBehaviour {
 	// otherwise, it will be decreased (if it hasn't been decreased).
 	void Update() {
 
-		shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
-
-		if (shellTexture.ToString () == "Beige_Shell") {
-			valueOfShell = 10;
-		} else if (shellTexture.ToString () == "Yellow_Shell") {
-			valueOfShell = 20;
-		} else if (shellTexture.ToString () == "Red_Shell") {
-			valueOfShell = 30;
-		}
-
 		if (RopeOverlapsWithCollider()) {
 
 			// only increment score once
@@ -67,9 +57,27 @@ public class SeashellAnchorController : MonoBehaviour {
 				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); 
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", new Color32(255,255,100,255));
+				
+				// Assign shell score only if the rope overlaps with the shell
+				shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
+				
+				if (shellTexture.ToString () == "Beige_Shell") {
+					Debug.Log ("Value of Beige_Shell");
+					valueOfShell = 10;
+
+				} else if (shellTexture.ToString () == "Yellow_Shell") {
+					Debug.Log ("Value of Yellow_Shell");
+					valueOfShell = 20;
+				} else if (shellTexture.ToString () == "Red_Shell") {
+					Debug.Log ("Value of Red_Shell");
+					valueOfShell = 30;
+
+				}
 
 				// show score earned with shell
 				StartCoroutine(ShowShellScore());
+				
+				Debug.Log (shellTexture);
 			}
 		} 
 
