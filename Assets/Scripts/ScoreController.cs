@@ -37,6 +37,7 @@ public class ScoreController : MonoBehaviour {
 	}
 	
 	public void Update() {
+
 		if (timeRemaining == 0) {
 			timerText.text = "Time is Up!";
 			timeupText.gameObject.SetActive(true);
@@ -102,7 +103,7 @@ public class ScoreController : MonoBehaviour {
 	private IEnumerator PrepareTransition() {
 		CancelInvoke("DecreaseTimeRemaining");
 		ropeModel.FreezeRope();
-		yield return new WaitForSeconds(2.0f);
+		yield return new WaitForSeconds(1.0f);
 		GameEnd();
 	}
 

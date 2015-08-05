@@ -5,9 +5,13 @@ using System.Collections;
 // attach this script to each Seashell Anchor
 public class SeashellAnchorController : MonoBehaviour {
 
-	public Text shellScore;
-
+	public Text shellScoreText;
+	private int selectedTexture;
+	public Texture2D[] textures;  // Assign textures in the Inspector
+	
+	[HideInInspector] 
 	public int valueOfShell;
+
 	private bool scoreIncreased;
 	private ScoreController scoreController;
 	private Color32 originalColor;
@@ -26,8 +30,12 @@ public class SeashellAnchorController : MonoBehaviour {
 		shellPosition = transform.parent.transform.position;
 		col = transform.GetComponent<SphereCollider>();
 		scale = transform.localScale.x;
-	}
 
+		// Choose a random texture to render
+		selectedTexture = Random.Range (0, textures.Length);
+		transform.parent.GetComponent<Renderer>().material.SetTexture("_MainTex", textures[selectedTexture]);
+	}
+	
 	// had to change approach to the score update;
 	// originally used OnTriggerEnter and OnTriggerExit
 	// to increase and decrease the score,
@@ -57,27 +65,26 @@ public class SeashellAnchorController : MonoBehaviour {
 				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); 
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", new Color32(255,255,100,255));
-				
+
+
 				// Assign shell score only if the rope overlaps with the shell
 				shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
-				
-				if (shellTexture.ToString () == "Beige_Shell") {
+				Debug.Log(shellTexture.ToString());
+
+				if (shellTexture.ToString () == "Beige_Shell (UnityEngine.Texture2D)") {
 					Debug.Log ("Value of Beige_Shell");
 					valueOfShell = 10;
-
-				} else if (shellTexture.ToString () == "Yellow_Shell") {
+				} else if (shellTexture.ToString () == "Yellow_Shell (UnityEngine.Texture2D)") {
 					Debug.Log ("Value of Yellow_Shell");
 					valueOfShell = 20;
-				} else if (shellTexture.ToString () == "Red_Shell") {
+				} else if (shellTexture.ToString () == "Red_Shell (UnityEngine.Texture2D)") {
 					Debug.Log ("Value of Red_Shell");
 					valueOfShell = 30;
-
+					
 				}
 
 				// show score earned with shell
 				StartCoroutine(ShowShellScore());
-				
-				Debug.Log (shellTexture);
 			}
 		} 
 
@@ -125,13 +132,17 @@ public class SeashellAnchorController : MonoBehaviour {
 		return numOfRopeFragmentsOverlapping;
 	}
 
+	public int GetValueOfShell() {
+		return valueOfShell;
+	}
+
 	// Fade in and out shell score
-	// By toggling the 'active status' of the shellScore game object
+	// By toggling the 'active status' of the shellScoreText game object
 	private IEnumerator ShowShellScore() {
-		shellScore.gameObject.SetActive(true);
-		shellScore.text = valueOfShell + " RP";
+		shellScoreText.gameObject.SetActive(true);
+		shellScoreText.text = valueOfShell + " RP";
 		yield return new WaitForSeconds(1);
-		shellScore.gameObject.SetActive(false);
+		shellScoreText.gameObject.SetActive(false);
 	}
 
 }
