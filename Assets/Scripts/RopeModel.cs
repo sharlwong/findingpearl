@@ -342,7 +342,7 @@ public class RopeModel : MonoBehaviour {
 		float newRed = initialRed;//fractionalIncrease*initialRed*0.5f;
 		float newGreen = initialGreen;//+ fractionalIncrease*initialGreen*0.5f;
 		float newBlue = initialBlue;// + fractionalIncrease*initialBlue*0.5f;
-		float newAlpha = initialAlpha - fractionalIncrease*0.9f;
+		float newAlpha = initialAlpha - fractionalIncrease*1.03f;
 
 		currentRendererColor = new Color(newRed, newGreen, newBlue, newAlpha);
 		ropeRenderer.SetColors(currentRendererColor, currentRendererColor);

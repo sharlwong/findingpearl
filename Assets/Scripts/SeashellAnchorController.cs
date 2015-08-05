@@ -81,7 +81,7 @@ public class SeashellAnchorController : MonoBehaviour {
 				// logs "Turqoise-shell-shadow (Instance)"
 				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); 
 				GetComponentsInParent<Renderer>()[1]
-					.material.SetColor("_Color", new Color32(255,255,100,255));
+					.material.SetColor("_Color", new Color32(200,200,200,255));
 
 				// show score earned with shell
 				StartCoroutine(ShowShellScore());
