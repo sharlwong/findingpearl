@@ -1,17 +1,20 @@
 ﻿using UnityEngine;
+using UnityEngine.UI;
 using System.Collections;
 
 // attach this script to each Seashell Anchor
 public class SeashellAnchorController : MonoBehaviour {
 
-	public int valueOfShell;
+	public Text shellScore;
 
+	public int valueOfShell;
 	private bool scoreIncreased;
 	private ScoreController scoreController;
 	private Color32 originalColor;
 	private Vector3 shellPosition;
 	private SphereCollider col;
 	private float scale;
+	private Texture shellTexture;
 	
 	void Start() {
 
@@ -38,6 +41,17 @@ public class SeashellAnchorController : MonoBehaviour {
 	// inside, the score will be increased (if it hasn't been increased),
 	// otherwise, it will be decreased (if it hasn't been decreased).
 	void Update() {
+
+		shellTexture = GetComponentsInParent<Renderer>()[1].material.GetTexture("_MainTex");
+
+		if (shellTexture.ToString () == "Beige_Shell") {
+			valueOfShell = 10;
+		} else if (shellTexture.ToString () == "Yellow_Shell") {
+			valueOfShell = 20;
+		} else if (shellTexture.ToString () == "Red_Shell") {
+			valueOfShell = 30;
+		}
+
 		if (RopeOverlapsWithCollider()) {
 
 			// only increment score once
@@ -53,6 +67,9 @@ public class SeashellAnchorController : MonoBehaviour {
 				// Debug.Log(GetComponentsInParent<Renderer>()[1].material.name); 
 				GetComponentsInParent<Renderer>()[1]
 					.material.SetColor("_Color", new Color32(255,255,100,255));
+
+				// show score earned with shell
+				StartCoroutine(ShowShellScore());
 			}
 		} 
 
@@ -99,4 +116,14 @@ public class SeashellAnchorController : MonoBehaviour {
 		}
 		return numOfRopeFragmentsOverlapping;
 	}
+
+	// Fade in and out shell score
+	// By toggling the 'active status' of the shellScore game object
+	private IEnumerator ShowShellScore() {
+		shellScore.gameObject.SetActive(true);
+		shellScore.text = valueOfShell + " RP";
+		yield return new WaitForSeconds(1);
+		shellScore.gameObject.SetActive(false);
+	}
+
 }

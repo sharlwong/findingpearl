@@ -21,7 +21,6 @@ public class ScoreController : MonoBehaviour {
 	private int score;
 	private Object[] shellsArray;
 	private int maxScore;
-	
 
 	// *** Public Methods *** //
 
@@ -77,7 +76,7 @@ public class ScoreController : MonoBehaviour {
 
 
 	// *** Private methods *** //
-	
+
 	private int CalculateMaxScore() {
 		int score = 0;
 		shellsArray = FindObjectsOfType(typeof(SeashellAnchorController));
