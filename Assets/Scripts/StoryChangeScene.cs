@@ -4,7 +4,7 @@ using System.Collections;
 public class StoryChangeScene : MonoBehaviour {
 
 	void Start() {
-		// PlayerPrefs.DeleteAll();
+		//PlayerPrefs.DeleteAll();
 	}
 
 	public void ChangeToScene(string sceneToChangeTo) {
@@ -13,6 +13,7 @@ public class StoryChangeScene : MonoBehaviour {
 			if (PlayerPrefs.GetInt("StoryActive") == 1) {
 				PlayerPrefs.SetInt("StoryActive", 0);
 				PlayerPrefs.Save();
+				GetComponent<AudioSource>().Stop();
 				TransitAndLoad("StartScene");
 				return; // important to return from method!
 			} 
@@ -23,6 +24,7 @@ public class StoryChangeScene : MonoBehaviour {
 
 	public void OnStartButtonEnter() {
 		if (PlayerPrefs.HasKey("FirstTimePlayer")) {
+			GetComponent<AudioSource>().Stop();
 			ChangeToScene("LevelSelectionScene");
 		} else {
 			PlayerPrefs.SetInt("FirstTimePlayer", 1);
